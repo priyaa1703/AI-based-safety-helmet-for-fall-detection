@@ -1,0 +1,27 @@
+{
+  "sizes": {
+    "keras_file_bytes": 37041,
+    "tflite_float_bytes": 5980,
+    "tflite_int8_bytes": 4856
+  },
+  "results": {
+    "Keras (float32)": {
+      "accuracy": 0.8975,
+      "fall_recall": 0.8860759493670886
+    },
+    "TFLite float32": {
+      "accuracy": 0.8975,
+      "fall_recall": 0.8860759493670886
+    },
+    "TFLite INT8": {
+      "accuracy": 0.898125,
+      "fall_recall": 0.890295358649789
+    }
+  },
+  "quantization": {
+    "input_scale": 0.059051819145679474,
+    "input_zero_point": 1,
+    "output_scale": 0.00390625,
+    "output_zero_point": -128
+  }
+}

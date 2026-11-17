@@ -1,0 +1,65 @@
+Test samples : 1600
+Accuracy     : 0.8975
+Weighted     : precision 0.8977  recall 0.8975  F1 0.8966
+Macro        : precision 0.9004  recall 0.8698  F1 0.8838
+
+Classification report
+                   precision    recall  f1-score   support
+
+           NORMAL      0.894     0.938     0.915       888
+             FALL      0.901     0.886     0.894       237
+     HEALTH_ALERT      0.899     0.782     0.836       238
+ENVIRONMENT_ALERT      0.908     0.873     0.890       237
+
+         accuracy                          0.897      1600
+        macro avg      0.900     0.870     0.884      1600
+     weighted avg      0.898     0.897     0.897      1600
+
+Confusion matrix (rows = true, columns = predicted)
+order: NORMAL, FALL, HEALTH_ALERT, ENVIRONMENT_ALERT
+[[833  17  18  20]
+ [ 24 210   3   0]
+ [ 46   5 186   1]
+ [ 29   1   0 207]]
+
+FALL class
+  real falls in test set        : 237
+  missed (false negatives)      : 27  (11.4%)
+  false alarms (false positives): 23
+  falls where ANY alert fired   : 213/237
+
+Why false negatives matter more than false positives for FALL:
+  - A false negative means a miner is hurt (maybe unconscious, trapped) and
+    nobody is told. The cost is delayed rescue, which can mean death.
+  - A false positive means a spurious alarm. The cost is a supervisor
+    checking on a miner who is fine - annoying, but harmless.
+  - So for deployment, bias the decision toward catching falls, e.g. raise an
+    alert when P(FALL) > ~0.3 rather than waiting until FALL is the arg-max,
+    and accept more false alarms.
+
+Most common confusions (true -> predicted):
+  HEALTH_ALERT       -> NORMAL            : 46
+  ENVIRONMENT_ALERT  -> NORMAL            : 29
+  FALL               -> NORMAL            : 24
+  NORMAL             -> ENVIRONMENT_ALERT : 20
+  NORMAL             -> HEALTH_ALERT      : 18
+  NORMAL             -> FALL              : 17
+
+Effect of lowering the FALL alert threshold (P(FALL) >= t, otherwise argmax):
+  t = 0.5: FALL recall 0.886, false alarms 23
+  t = 0.3: FALL recall 0.924, false alarms 39
+  t = 0.2: FALL recall 0.932, false alarms 55
+  t = 0.1: FALL recall 0.970, false alarms 84
+
+Permutation importance on the test set (bigger = model relies on it more)
+  feature       acc drop  FALL recall drop
+  HeartRate       0.0973            0.0203
+  Temperature     0.0936            0.0325
+  Humidity        0.0926            0.0198
+  AccZ            0.0862            0.2751
+  AccX            0.0824            0.2806
+  SpO2            0.0801            0.0177
+  AccY            0.0256            0.0376
+  GyroY           0.0152            0.0422
+  GyroZ           0.0114            0.0308
+  GyroX           0.0084            0.0380
