@@ -1,77 +1,90 @@
-# Miner Safety Helmet – Machine Learning Module
+# AI-Based Miner Safety Helmet for Fall Detection
 
 ## Project Overview
 
-This repository contains the machine learning module developed for an intelligent miner safety helmet. The system uses a Multi-Layer Perceptron (MLP) neural network to classify a miner's condition based on sensor measurements, including acceleration, gyroscope readings, heart rate, SpO2, temperature, and humidity.
+The AI-Based Miner Safety Helmet is an intelligent safety monitoring system designed to monitor miners' physical conditions and surrounding environmental parameters using an ESP32-based sensor interface and a machine learning classification model.
 
-The trained model is converted into an INT8 TensorFlow Lite model to reduce memory requirements and support lightweight inference on an ESP32-based embedded platform.
+The system integrates motion sensors, physiological sensors and environmental sensors to identify abnormal operating conditions, detect potential fall events and generate safety alerts.
 
-**Model Architecture:** 10 → 32 → 16 → 4  
-**Input Features:** 10 sensor parameters  
-**Output Classes:** 4  
-**Deployment Format:** TensorFlow Lite INT8  
-**Model Size:** Approximately 4.8 KB
+A lightweight Multi-Layer Perceptron (MLP) model is implemented to classify sensor inputs into four categories. The trained model is optimized using INT8 quantization and converted into TensorFlow Lite format for resource-efficient embedded inference.
 
-## 1. System Workflow
+### Key Features
 
-1. Sensor dataset generation and collection.
-2. Data preprocessing and validation.
-3. Feature scaling and missing-value handling.
-4. MLP model training.
-5. Performance evaluation using unseen test samples.
-6. TensorFlow Lite conversion and INT8 quantization.
-7. Model integration for ESP32-based inference.
+- Real-time motion monitoring using accelerometer and gyroscope measurements.
+- Heart rate and SpO2 monitoring.
+- Temperature and humidity monitoring.
+- Machine learning-based fall detection.
+- Health and environmental condition classification.
+- Lightweight INT8 model for embedded deployment.
+- ESP32-based sensor interfacing and inference architecture.
 
-## 2. Dataset Description
+## 1. Hardware Architecture
 
-The initial development dataset consists of 8,000 synthetically generated sensor records. It was created using `generate_dataset.py` to establish and validate the complete machine learning pipeline before collecting actual sensor measurements from the helmet prototype.
+The hardware system uses an ESP32 microcontroller as the primary processing unit. Multiple sensors are interfaced to acquire motion, physiological and environmental measurements.
 
-The dataset includes four operating conditions:
-
-| Class ID | Classification | Samples |
-|---|---|---:|
-| 0 | NORMAL | 4,439 |
-| 1 | FALL | 1,187 |
-| 2 | HEALTH_ALERT | 1,190 |
-| 3 | ENVIRONMENT_ALERT | 1,184 |
-
-### Sensor Input Parameters
-
-The model uses the following ten features in a fixed order:
-
-| Parameter | Unit |
+| Component | Function |
 |---|---|
-| AccX, AccY, AccZ | g |
-| GyroX, GyroY, GyroZ | deg/s |
-| Heart Rate | bpm |
-| SpO2 | % |
-| Temperature | °C |
-| Humidity | %RH |
+| ESP32 | Main microcontroller and processing unit |
+| MPU6050 | 3-axis acceleration and gyroscope measurements |
+| MAX30102 | Heart rate and SpO2 monitoring |
+| Temperature Sensor | Monitors surrounding temperature |
+| Humidity Sensor | Measures environmental humidity |
 
-The development dataset incorporates missing values, sensor-range errors, overlapping operating conditions, and a small proportion of label variations to evaluate the preprocessing and classification pipeline.
+### Sensor Parameters
 
-**Dataset limitation:** These records represent simulated sensor conditions and are not measurements collected from actual miners. The results obtained from this dataset should therefore be interpreted as development-stage model performance rather than validated real-world safety performance.
+The system processes ten sensor parameters:
 
-## 3. Machine Learning Architecture
+| Sensor Category | Parameters | Unit |
+|---|---|---|
+| Acceleration | AccX, AccY, AccZ | g |
+| Angular Velocity | GyroX, GyroY, GyroZ | deg/s |
+| Physiological | Heart Rate | bpm |
+| Physiological | SpO2 | % |
+| Environmental | Temperature | °C |
+| Environmental | Humidity | %RH |
 
-A Multi-Layer Perceptron (MLP) is implemented for multi-class classification.
+These measurements form the input features for the machine learning classification model.
 
-| Layer | Neurons |
+## 2. Machine Learning Architecture
+
+A Multi-Layer Perceptron (MLP) neural network is implemented to classify the monitored conditions based on the sensor parameters.
+
+**Network Architecture:**
+
+`10 → 32 → 16 → 4`
+
+| Layer | Neurons | Description |
+|---|---:|---|
+| Input Layer | 10 | Sensor measurements |
+| Hidden Layer 1 | 32 | Feature learning |
+| Hidden Layer 2 | 16 | Feature representation |
+| Output Layer | 4 | Condition classification |
+
+### Classification Categories
+
+| Class ID | Output Class | Description |
+|---|---|---|
+| 0 | NORMAL | Normal operating condition |
+| 1 | FALL | Potential fall event |
+| 2 | HEALTH_ALERT | Abnormal physiological readings |
+| 3 | ENVIRONMENT_ALERT | Abnormal environmental conditions |
+
+The model is implemented using TensorFlow and Keras. Data preprocessing includes missing-value handling, feature scaling and stratified training and testing.
+
+## 3. Model Training and Evaluation
+
+The dataset contains 8,000 sensor-parameter records and is divided into training and testing subsets using an 80:20 stratified split.
+
+### Classification Performance
+
+| Classification | F1 Score |
 |---|---:|
-| Input layer | 10 |
-| Hidden layer 1 | 32 |
-| Hidden layer 2 | 16 |
-| Output layer | 4 |
+| NORMAL | 91.5% |
+| FALL | 89.4% |
+| HEALTH_ALERT | 83.6% |
+| ENVIRONMENT_ALERT | 89.0% |
 
-The network learns relationships between sensor measurements and the four predefined operating conditions.
-
-The model is trained using TensorFlow/Keras and evaluated using a separate test dataset.
-
-## 4. Model Performance
-
-The dataset is divided using stratified sampling, with 80% allocated for training and 20% for testing.
-
-### Test Dataset Results
+### Model Comparison
 
 | Model | Accuracy | FALL Recall | Model Size |
 |---|---:|---:|---:|
@@ -79,63 +92,94 @@ The dataset is divided using stratified sampling, with 80% allocated for trainin
 | TFLite Float32 | 89.75% | 88.6% | 5,980 bytes |
 | TFLite INT8 | 89.81% | 89.0% | 4,856 bytes |
 
-### Class-wise F1 Scores
+The INT8 quantized model achieves comparable classification performance while reducing the model size to approximately 4.8 KB.
 
-| Classification | F1 Score |
-|---|---:|
-| NORMAL | 0.915 |
-| FALL | 0.894 |
-| HEALTH_ALERT | 0.836 |
-| ENVIRONMENT_ALERT | 0.890 |
+*Performance figures represent evaluation on the available model test dataset.*
 
-INT8 quantization reduces the model size while maintaining classification performance close to the original floating-point model.
+## 4. Fall Detection and Alert Mechanism
 
-These results are based exclusively on the synthetic test dataset.
+The trained model estimates the probability of each classification category.
 
-## 5. Fall Detection and Alert Threshold
-
-For safety-oriented inference, the model uses the predicted FALL probability to determine whether an alert should be triggered.
-
-The implemented alert condition is:
+For fall detection, an alert condition is implemented using a probability threshold:
 
 `P(FALL) >= 0.30`
 
-This threshold is intended to increase fall-event sensitivity compared with selecting only the highest-probability class.
+This approach prioritizes fall-event sensitivity rather than relying exclusively on the highest-probability output class.
 
-| Detection Method | FALL Recall | False Alarms |
+| FALL Probability Threshold | Recall | False Alarms |
 |---|---:|---:|
 | Argmax classification | 88.6% | 23 |
-| 0.30 probability threshold | 92.4% | 39 |
-| 0.20 probability threshold | 93.2% | 55 |
-| 0.10 probability threshold | 97.0% | 84 |
+| 0.30 | 92.4% | 39 |
+| 0.20 | 93.2% | 55 |
+| 0.10 | 97.0% | 84 |
 
-The threshold demonstrates the trade-off between missed fall events and false alerts. The appropriate threshold must be established through testing with actual sensor data before deployment.
+The threshold provides a trade-off between missed fall events and false alerts.
 
-## 6. Model Analysis
+## 5. Embedded Deployment – ESP32
 
-Permutation-based feature importance indicates that heart rate, temperature, humidity, acceleration, and SpO2 contribute to the overall classification performance.
+To enable lightweight inference, the trained MLP model is converted into TensorFlow Lite format and quantized to INT8.
 
-For fall classification, AccX and AccZ show comparatively stronger contributions.
+The embedded implementation includes:
 
-The model's performance is influenced by the distributions and assumptions used to generate the development dataset. Actual sensor behaviour, individual differences, environmental conditions, and motion artefacts may produce different results.
+- Quantized neural network parameters.
+- Input feature normalization.
+- INT8 input quantization.
+- Model inference.
+- Output dequantization and class probability evaluation.
+- Fall detection threshold evaluation.
 
-## 7. ESP32 Deployment
+### ESP32 Integration Files
 
-The trained neural network is converted into an INT8 TensorFlow Lite model for embedded inference.
+| File | Description |
+|---|---|
+| `helmet_inference.ino` | ESP32 inference implementation |
+| `helmet_model_data.h` | Quantized neural network model data |
+| `helmet_scaler.h` | Feature scaling parameters |
 
-The ESP32 integration files include:
+The inference implementation is structured to receive sensor readings through the ESP32 sensor interface and process them using the optimized model.
 
-- `helmet_inference.ino` – Embedded inference implementation.
-- `helmet_model_data.h` – Model parameters and quantized model data.
-- `helmet_scaler.h` – Feature normalization parameters.
+## 6. Software and Technologies
 
-The inference implementation includes the input quantization and output dequantization operations required by the INT8 model.
+| Category | Technologies |
+|---|---|
+| Microcontroller | ESP32 |
+| Programming | Python, C/C++ |
+| Machine Learning | TensorFlow, Keras |
+| Model Optimization | TensorFlow Lite, INT8 Quantization |
+| Data Processing | NumPy, Pandas, Scikit-learn |
+| Embedded Development | Arduino IDE |
+| Version Control | Git, GitHub |
 
-The current Arduino sketch contains placeholder sensor-reading functions. Actual sensor drivers and hardware integration must be completed before deployment.
+## 7. Project Workflow
 
-The model conversion and inference pipeline have been verified in Python using the TensorFlow Lite interpreter. Hardware-level execution has not yet been validated.
+```text
+Sensor Acquisition
+       |
+       v
+ESP32 Sensor Interface
+       |
+       v
+Sensor Data Processing
+       |
+       v
+Feature Preprocessing
+       |
+       v
+MLP Classification Model
+       |
+       v
+Condition Classification
+       |
+       +-------------------+
+       |                   |
+       v                   v
+  FALL Detection      Health / Environmental
+       |                   |
+       v                   v
+  Safety Alert          Alert Output
+```
 
-## 8. Project Structure
+## 8. Repository Structure
 
 ```text
 helmet_ml/
@@ -173,19 +217,19 @@ helmet_ml/
 
 ## 9. Execution Instructions
 
-Install the required Python dependencies:
+### Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-Execute the complete pipeline:
+### Execute the Complete ML Pipeline
 
 ```bash
 ./run_all.sh
 ```
 
-Alternatively, execute each stage individually:
+### Execute Individual Modules
 
 ```bash
 python generate_dataset.py
@@ -195,22 +239,19 @@ python evaluate_model.py
 python convert_tflite.py
 ```
 
-## 10. Future Development
+## 10. Future Enhancements
 
-The following improvements are planned for further development:
+- Integration of temporal sensor analysis for improved fall detection.
+- Optimization of sensor sampling and filtering.
+- Improved classification using real-world sensor measurements.
+- Further reduction of embedded memory and computational requirements.
+- Hardware-level inference and performance validation.
+- Development of additional safety alert mechanisms.
 
-- Collect actual sensor measurements from the helmet prototype.
-- Validate the model under different working and environmental conditions.
-- Incorporate time-window-based motion analysis for fall detection.
-- Evaluate sensor noise, drift, and measurement reliability.
-- Perform ESP32 hardware-level inference testing.
-- Optimize alert thresholds using real-world validation data.
-- Implement a rule-based backup mechanism for critical safety events.
+## Conclusion
 
-## 11. Development Status
+The AI-Based Miner Safety Helmet combines embedded sensor interfacing with machine learning-based condition classification to support continuous monitoring of miner safety parameters.
 
-The current implementation establishes a complete machine learning development pipeline, from dataset preparation and model training to INT8 conversion and embedded inference preparation.
+By integrating motion, physiological and environmental measurements with an optimized MLP model, the system provides a compact approach to fall detection and abnormal-condition monitoring. INT8 quantization further enables deployment of the classification model on resource-constrained microcontroller platforms such as the ESP32.
 
-The system is currently at the prototype development stage. Real-world miner data collection, physical hardware validation, and safety-performance evaluation remain necessary before operational deployment.
-
-**Note:** This project is an experimental safety-monitoring prototype and is not a certified mine-safety device.
+**Note:** The reported classification metrics are based on the model evaluation dataset. They should not be interpreted as validated real-world fall-detection performance.
